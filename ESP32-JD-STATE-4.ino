@@ -133,9 +133,10 @@ void IRAM_ATTR onTimer0()
         changeState(STATE_VENDING);
       } 
     } else if (currentState == STATE_STANDBY) {
-        changeState(STATE_ACTIVE);
+      changeState(STATE_ACTIVE);
     } else if (currentState == STATE_VENDING) {
-      // Do Nothing for now
+      // **TEMP** -> Stop Animations if screen is touched
+      AnimateGIF = false;
     }
   } else {    // No Touchscreen Event
     // Check and see if inactivity time has been exceeded and if so, go into standby state
@@ -195,8 +196,8 @@ void StateVending() {
 
   tft.drawCentreString(tempText, centerX, textY, FONT_SIZE);
 
-  //  PlayGIF(gifFiles[gifIndex], 5); // Play GIF off of SD card for 5 seconds
-  delay(1000);
+  PlayGIF(gifFiles[gifIndex], 5); // Play GIF off of SD card for 5 seconds
+  // delay(1000);
   
   // Vending is complete - Set State to Active 
   changeState(STATE_ACTIVE);
@@ -323,8 +324,10 @@ void loop() {
 bool PlayGIF(String gifFile, int seconds) {
   time_t startTime = now();
 
+  Serial.println("PlayGIF: Entered");
+
   AnimateGIF = true;
-  while (AnimateGIF) {
+  while (AnimateGIF == true) {
     if (gif.open(gifFile.c_str(), fileOpen, fileClose, fileRead, fileSeek, GIFDraw)) {
     #if defined(SERIALDEBUG)
         Serial.print("SUCCESS gif.open: ");
@@ -341,7 +344,11 @@ bool PlayGIF(String gifFile, int seconds) {
       return (false);
     }
     if ((second(now()) - second(startTime)) >= seconds) {
+      Serial.println("PlayGIF: Time Exceeded");
       AnimateGIF = false;
+    }
+    if (AnimateGIF == false) {
+      return(true);
     }
   }
 }
